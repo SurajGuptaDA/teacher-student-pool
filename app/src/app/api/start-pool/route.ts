@@ -5,7 +5,7 @@ import Question from "@/models/questionModel"; // Assuming you have a Question m
 
 connect(); // Ensure the database connection is established
 
-export default async function POST(request: NextRequest) {
+export async function POST(request: NextRequest) {
     const question = await Question.findOne({ isAnswered: false });
     if (!question) {
         return NextResponse.json(

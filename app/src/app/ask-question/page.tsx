@@ -1,18 +1,83 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, use } from "react";
 import React from "react";
+import axios from "axios";
+import { socket } from "@/socket";
 
 
 
 const ResultsPage: React.FC = () => {
-    const [pollResults] = useState<{ option: string; percent: number }[]>([
-        { option: "Mars", percent: 75 },
-        { option: "Venus", percent: 5 },
-        { option: "Jupiter", percent: 5 },
-        { option: "Saturn", percent: 15 },
-    ]);
+    const [pollResults, setPollResults] = useState<{ option: string; percent: number }[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [activeTab, setActiveTab] = useState("chat");
+    const [question, setQuestion] = useState("");
+    const [options, setOptions] = useState([]);
+    const [timeLeft, setTimeLeft] = useState<number>(15);
+    const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+    const [isStarted, setIsStarted] = useState<boolean>(false);
+    const [isAnswered, setIsAnswered] = useState<boolean>(false);
+
+    useEffect(() => {
+      const res  = axios.post("/api/start-pool");
+      res.then((response) => {
+        console.log("Pool started:", response.data);
+      }).catch((error) => {
+        console.error("Error starting pool:", error);
+      });
+    }, []);
+
+    useEffect(() => {
+          
+      if (isStarted) {
+        return; // Stop polling if the question has already started.
+      }
+
+      const intervalId = setInterval(() => socket.emit("is-started"), 2000); // Poll every 2 seconds
+
+      return () => clearInterval(intervalId); // Cleanup the interval when the component unmounts or isStarted changes.
+    }, [isStarted]);
+
+    useEffect(() => {
+        socket.on("connect", () => {
+            console.log("Connected");
+        });
+        socket.on("question-started", (data: any) => {
+          console.log("Question started:", data);
+          setQuestion(data.question);
+          const ops = data.options.split(', ');
+          setOptions(ops);
+          setPollResults(ops.map((opt: string) => ({
+            option: opt,
+            percent: 0 // Initialize with 0 percent
+          })));
+          setTimeLeft(parseInt(data.timeLimit));
+          setIsStarted(true);
+          if (timer) clearInterval(timer);
+          const newTimer = setInterval(() => {
+            setTimeLeft((prev) => {
+              if (prev <= 1) {
+                clearInterval(newTimer);
+                socket.emit("time-left");
+                return 0;
+              }
+              socket.emit("time-left");
+              return prev - 1;
+            });
+          }, 1000);
+          setTimer(newTimer);
+        });
+        socket.on("time-up", () => {
+          if (timer) clearInterval(timer);
+          setIsStarted(false);
+          setIsAnswered(false);
+        });
+        socket.on("no-questions", (data: any) => {
+          console.log("No questions available:", data);
+        });
+        // return () => {
+        //   socket.disconnect();
+        // };
+      }, []);
   return (
     <div className="min-h-screen flex flex-col justify-center bg-white">
       {/* View Poll History Button */}
@@ -27,7 +92,7 @@ const ResultsPage: React.FC = () => {
             <span>Question</span>
         </div>
         <div className="bg-gray-200 rounded-t-xl px-6 py-2 font-medium text-left">
-          Which planet is known as the Red Planet?*
+          {question}
         </div>
         <div className="bg-white p-6 space-y-3">
           {pollResults.map((o, i) => (
@@ -53,7 +118,7 @@ const ResultsPage: React.FC = () => {
 
       {/* Add New Question Button */}
     <div className="flex justify-center pl-150">
-        <button className="mt-8 bg-indigo-500 hover:bg-indigo-600 text-white px-7 py-2 rounded-full text-base font-medium">
+        <button className="mt-8 bg-indigo-500 hover:bg-indigo-600 text-white px-7 py-2 rounded-full text-base font-medium" disabled={!isAnswered}>
             + Ask a new question
         </button>
     </div>

@@ -50,6 +50,6 @@ QuestionSchema.methods.addAnswer = function(name: string, answer: string) {
     return this.save();
 };
 
-const User = mongoose.models.questions || mongoose.model("questions", QuestionSchema);
+const Question = mongoose.models.questions || mongoose.model("questions", QuestionSchema);
 
-export default User;
+export default Question;

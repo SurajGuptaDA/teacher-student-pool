@@ -1,8 +1,22 @@
 "use client";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
-const NameEntry: React.FC<{ onContinue: (name: string) => void }> = ({ onContinue }) => {
+export default function NameEntry() {
   const [name, setName] = useState("");
+  const router = useRouter();
+
+  async function handleSubmit() {
+    const res = await axios.post("/api/login-user", { name, role: "student" });
+    if (res.status === 200) {
+      router.push("/answer-question");
+    } else {
+      alert("Failed to login as student");
+      console.error("Error logging in as student:", res.data.error);
+      return;
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white">
@@ -33,7 +47,7 @@ const NameEntry: React.FC<{ onContinue: (name: string) => void }> = ({ onContinu
       {/* Continue Button */}
       <button
         className="bg-indigo-500 hover:bg-indigo-600 text-white text-lg font-medium px-10 py-2 rounded-full transition"
-        onClick={() => onContinue(name)}
+        onClick={handleSubmit}
         disabled={!name.trim()}
       >
         Continue
@@ -41,5 +55,3 @@ const NameEntry: React.FC<{ onContinue: (name: string) => void }> = ({ onContinu
     </div>
   );
 };
-
-export default NameEntry;

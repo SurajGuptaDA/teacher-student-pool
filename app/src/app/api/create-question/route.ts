@@ -5,10 +5,11 @@ import { connect } from '@/dbConfig/dbConfig';
 
 connect(); // Ensure the database connection is established
 
-export default async function POST(request: NextRequest) {
+export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const { question, options, timeLimit } = body;
+        console.log("Received data:", { question, options, timeLimit });
     
         // Validate input
         if (!question || !options || !timeLimit) {
@@ -42,7 +43,7 @@ export default async function POST(request: NextRequest) {
             question,
             options: optionsString, 
             rightOption: rightOption,
-            timeLimit
+            timeLimit, 
         });
         const savedQuestion = await newQuestion.save();
     

@@ -5,7 +5,7 @@ export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
     console.log(path);
 
-    const isPublicPath = path === '/student-login' || path === '/';
+    const isPublicPath = path === '/student-login' || path === '/' || path === '/testing-socket';
     const token = request.cookies.get('authToken')?.value || ''
     const isTeacher = await checkIsTeacherToken(request);
     console.log("Admin: " + isTeacher);

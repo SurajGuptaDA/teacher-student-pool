@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 const PollPage: React.FC = () => {
     const [question, setQuestion] = useState("");
-    const [timeLimit, setTimeLimit] = useState("60 seconds");
+    const [timeLimit, setTimeLimit] = useState("60");
     const [options, setOptions] = useState<{ id: number; value: string; answer: "yes" | "no" }[]>([]);
     const router = useRouter();
 
@@ -37,17 +37,15 @@ const PollPage: React.FC = () => {
                 alert("Please enter a question and at least one option.");
                 return;
             }
-            const response = await axios.post("/api/create-question", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
+            console.log(question, options.map(opt => ({ value: opt.value, answer: opt.answer })), timeLimit);  
+            const response = await axios.post("/api/create-question", 
+                JSON.stringify({
                     question,
-                    options,
+                    options: options.map(opt => ({ value: opt.value, answer: opt.answer })),
                     timeLimit,
-                }),
-            });
+                })
+            );
+            console.log(response.data);
             if (response.status === 200) {
                 alert("Question created successfully!");
                 setQuestion("");
