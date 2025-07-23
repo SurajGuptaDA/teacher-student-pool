@@ -1,9 +1,31 @@
 "use client";
 import Image from "next/image";
 import React from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function Home() {
   const [selectedRole, setSelectedRole] = React.useState("student");
+  const router = useRouter();
+
+  async function handleRoleSelection(role: string) {
+    if (role === "student") {
+      
+      router.push("/student-login");
+    } else if (role === "teacher") {
+      const res = await axios.post("/api/login-user", {
+        role,
+      });
+      if (res.status === 200) {
+        router.push("/create-pool");
+      }
+      else {
+        alert("Failed to login as teacher");
+        console.error("Error logging in as teacher:", res.data.error);
+        return;
+      }
+    }
+  }
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white">
       <div className="mb-8 mt-4">
@@ -45,7 +67,10 @@ export default function Home() {
           </p>
         </div>
       </div>
-      <button className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-2 rounded-full font-medium">
+      <button
+        className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-2 rounded-full font-medium"
+        onClick={() => handleRoleSelection(selectedRole)}
+      >
         Continue
       </button>
     </div>

@@ -1,9 +1,14 @@
 "use client";
 import React from "react";
 import { useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const PollPage: React.FC = () => {
+    const [question, setQuestion] = useState("");
+    const [timeLimit, setTimeLimit] = useState("60 seconds");
     const [options, setOptions] = useState<{ id: number; value: string; answer: "yes" | "no" }[]>([]);
+    const router = useRouter();
 
         const handleAddOption = () => {
             setOptions((prev) => [
@@ -27,6 +32,32 @@ const PollPage: React.FC = () => {
                 )
             );
         };
+        const handleSubmit = async () => {
+            if (!question || options.length === 0) {
+                alert("Please enter a question and at least one option.");
+                return;
+            }
+            const response = await axios.post("/api/create-question", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    question,
+                    options,
+                    timeLimit,
+                }),
+            });
+            if (response.status === 200) {
+                alert("Question created successfully!");
+                setQuestion("");
+                setOptions([]);
+                setTimeLimit("60 seconds");
+                router.push("/ask-question");
+            } else {
+                alert("Failed to create question. Please try again.");
+            }
+        }
   return (
     
     <div className="min-h-screen flex flex-col pl-30 justify-center bg-white">
@@ -50,9 +81,14 @@ const PollPage: React.FC = () => {
           </label>
           <select
             className="ml-3 border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            aria-label="Select time limit"
+            aria-label="Select time limit" 
+            value={timeLimit}
+            onChange={(e) => setTimeLimit(e.target.value)}
           >
-            <option>60 seconds</option>
+            <option value={60}>60 seconds</option>
+            <option value={45}>45 seconds</option>
+            <option value={30}>30 seconds</option>
+            <option value={15}>15 seconds</option>
             {/* Add more options as needed */}
           </select>
         </div>
@@ -60,8 +96,10 @@ const PollPage: React.FC = () => {
           <textarea
             id="question"
             placeholder="Type your question..."
-            className="flex-1 rounded-md p-3 text-gray-900 resize-y min-h-[48px] max-h-40 focus:outline-none font-bold"
-            rows={2}
+            className="flex-1 rounded-md p-3 text-gray-900 resize-y min-h-[48px] max-h-40 focus:outline-none font-bold w-140"
+            rows={2} 
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
           />
           <div className="text-gray-400 text-right text-xs p-1">0/100</div>
         </div>
@@ -114,7 +152,7 @@ const PollPage: React.FC = () => {
 
       {/* Bottom Button */}
         <div className="fixed bottom-8 right-8 z-50">
-            <button className="w-[140px] py-2 rounded-full bg-indigo-500 text-white font-medium text-lg hover:bg-indigo-600 transition shadow-lg">
+            <button onClick={handleSubmit} className="w-[140px] py-2 rounded-full bg-indigo-500 text-white font-medium text-lg hover:bg-indigo-600 transition shadow-lg">
                 Ask Question
             </button>
         </div>

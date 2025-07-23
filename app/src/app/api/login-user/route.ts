@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createToken } from "@/helpers/tokenHelper"; 
 
-export default async function POST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     let { name, role } = body;
