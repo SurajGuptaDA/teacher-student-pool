@@ -13,6 +13,7 @@ connect(); // Connect to MongoDB
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
+let timeid = null;
 
 io.on('connection', (socket) => {
   console.log('User connected');
@@ -40,6 +41,21 @@ io.on('connection', (socket) => {
       }
       console.log("Unanswered question found:", questionFormat);
       socket.emit("question-started", questionFormat);
+      let limit = Number(questionFormat.timeLimit) * 1000;
+      console.log("Time limit for the question:", limit, "ms");
+      console.log(typeof limit);
+      // console.log("Time limit for the question:", limit, "ms"
+      // socket.timeout(limit).emit("time-up");
+      if (!timeid) {
+          timeid = setTimeout(() => {
+            socket.emit("time-up");
+            console.log("Time is up for the question:");
+            question.isAnswered = true; // Mark the question as answered
+            question.save();
+            timeid = null;
+          }, limit);
+      }
+      
     });
     socket.on("submit-answer", async (answer) => {
       await Question.findOne({ isAnswered: false, isStarted: true }).then( async (question) => {
@@ -52,21 +68,21 @@ io.on('connection', (socket) => {
           // socket.emit("answer-submitted", { success: true, message: "Answer submitted successfully" });
       });
     });
-    socket.on("time-left", async () => {
-      const question = await Question.findOne({ isAnswered: false, isStarted: true });
-      if (!question) {
-        socket.emit("no-questions", { error: "No unanswered questions available" });
-        return;
-      }
-      const timeLeft = question.timeLeft();
-      if (timeLeft <= 0) {
-        socket.emit("time-up", { message: "Time is up!" });
-        question.isAnswered = true; // Mark the question as answered
-        question.save();
-        return;
-      }
-      socket.emit("time-left", { timeLeft });
-    });
+    // socket.on("time-left", async () => {
+    //   const question = await Question.findOne({ isAnswered: false, isStarted: true });
+    //   if (!question) {
+    //     socket.emit("no-questions", { error: "No unanswered questions available" });
+    //     return;
+    //   }
+    //   const timeLeft = question.timeLeft();
+    //   if (timeLeft <= 0) {
+    //     socket.emit("time-up", { message: "Time is up!" });
+    //     question.isAnswered = true; // Mark the question as answered
+    //     question.save();
+    //     return;
+    //   }
+    //   socket.emit("time-left", { timeLeft });
+    // });
   });
 });
 

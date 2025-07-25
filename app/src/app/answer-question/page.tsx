@@ -57,10 +57,10 @@ const QuizQuestion: React.FC = () => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(newTimer);
-            socket.emit("time-left");
+            // socket.emit("time-left");
             return 0;
           }
-          socket.emit("time-left");
+          // socket.emit("time-left");
           return prev - 1;
         });
       }, 1000);
@@ -77,6 +77,10 @@ const QuizQuestion: React.FC = () => {
     // };
   }, []);
   async function handleSubmit() {
+    if (isAnswered) {
+      alert("You have already answered this question.");
+      return;
+    }
     if (selected === null || selected < 0 || selected >= options.length) {
       alert("Please select an option.");
       return;

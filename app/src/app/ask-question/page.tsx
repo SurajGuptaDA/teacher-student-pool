@@ -57,10 +57,10 @@ const ResultsPage: React.FC = () => {
             setTimeLeft((prev) => {
               if (prev <= 1) {
                 clearInterval(newTimer);
-                socket.emit("time-left");
+                // socket.emit("time-left");
                 return 0;
               }
-              socket.emit("time-left");
+              // socket.emit("time-left");
               return prev - 1;
             });
           }, 1000);
